@@ -134,5 +134,5 @@ int main () {
 
     print_sudoku (size, sudoku);
 
-    // return 0;
+    return 0;
 }
