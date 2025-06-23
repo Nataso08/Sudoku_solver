@@ -5,7 +5,7 @@
 
 using namespace std;
 
-bool check (int size, vector<vector<int>> sudoku) {
+bool check (const int size, const vector<vector<int>>& sudoku) {
     // rows control
     for (int row=0; row<size; row++) {
         for (int i=1; i<=size; i++) {
@@ -17,9 +17,11 @@ bool check (int size, vector<vector<int>> sudoku) {
     for (int column=0; column<size; column++) {
         vector<int> c (size, 0);
         for (int row=0; row<size; row++) {
-            c[sudoku[row][column] -1] ++;
-
-            if (c[sudoku[row][column] -1] > 1) return false;
+            if (sudoku[row][column] != 0) {
+                c[sudoku[row][column] -1] ++;
+    
+                if (c[sudoku[row][column] -1] > 1) return false;
+            }
         }
     }
 
@@ -30,16 +32,18 @@ bool check (int size, vector<vector<int>> sudoku) {
 
     for (int row=0; row<size; row++) {
         for (int column=0; column<size; column++) {
-            grid[row/grid_size][column/grid_size][sudoku[row][column] -1] ++;
-
-            if (grid[row/grid_size][column/grid_size][sudoku[row][column] -1] > 1) return false;
+            if (sudoku[row][column] != 0) {
+                grid[row/grid_size][column/grid_size][sudoku[row][column] -1] ++;
+    
+                if (grid[row/grid_size][column/grid_size][sudoku[row][column] -1] > 1) return false;
+            }
         }
     }
 
     return true;
 }
 
-void print_sudoku (int size, vector<vector<int>> sudoku) {
+void print_sudoku (const int size, const vector<vector<int>>& sudoku) {
     cout << endl;
 
     for (int row=0; row<size; row++) {
@@ -71,26 +75,64 @@ int main () {
         cout << "The inserted sudoku is unsolvable" << endl;
         return 0;
     }
-
+    
     vector<vector<int>> sudoku = sudoku_input;
+    
+    int solved_cells = 0;
+    
+    bool go_back = false;
+    
+    pair<int, int> cell = {0, 0};
+    
+    while (solved_cells < empty_cells) {
+        system("cls");
+        print_sudoku(size, sudoku);
+        
+        // find empty cell
+        while (sudoku[cell.first][cell.second] != 0 && !go_back) {
+            cell.second ++;
+            if (cell.second >= size) {
+                cell.first ++;
+                cell.second = 0;
+            }
 
-    int tried_cells = 0;
+            if (cell.first >= size && cell.second >= size) break;
+        }
+        
+        // increment value of finded cell as long as sudoku is ok or value of this cell is larger than size (max value)
+        do {
+            sudoku[cell.first][cell.second] ++;
 
-    pair<int, int> last_cell = {0, 0};
-
-    /*do {
-
-
-
-
-
-
-    } while (!check(size, sudoku) || tried_cells < empty_cells);
-
-    */
+            if (sudoku[cell.first][cell.second] > size) break;
+        } while (!check(size, sudoku));
+        
+        // "overflow" of this cell
+        if (sudoku[cell.first][cell.second] > size) {
+            sudoku[cell.first][cell.second] = 0;
+            
+            // find last editable cell
+            do {
+                cell.second --;
+                if (cell.second < 0) {
+                    cell.first --;
+                    cell.second = size -1;
+                }
+                
+                if (cell.first < 0 || cell.second < 0) break;
+                
+                if (sudoku_input[cell.first][cell.second] == 0) solved_cells --;
+            } while (sudoku_input[cell.first][cell.second] != 0);
+            
+            go_back = true;
+        } else {
+            if (sudoku_input[cell.first][cell.second] == 0) solved_cells ++;
+            go_back = false;
+        }
+    }
+    
 
 
     print_sudoku (size, sudoku);
 
-    return 0;
+    // return 0;
 }
