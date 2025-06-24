@@ -43,6 +43,33 @@ bool check (const int size, const vector<vector<int>>& sudoku) {
     return true;
 }
 
+bool check (const int size, const vector<vector<int>>& sudoku, const pair<int, int>& cell) {
+    int x = sudoku[cell.first][cell.second];
+    
+    for (int i=0; i<size; i++) {
+        if (sudoku[cell.first][i] == x && i != cell.second || sudoku[i][cell.second] == x && i != cell.first) return false;
+    }
+
+    int box_size = sqrt(size);
+
+    pair<int, int> limit_row = {
+        (cell.first/box_size) * box_size, 
+        (cell.first/box_size + 1) * box_size
+    };
+    pair<int, int> limit_column = {
+        ((int) cell.second/box_size) * box_size, 
+        ((int) cell.second/box_size + 1) * box_size
+    };
+
+    for (int row=limit_row.first; row<limit_row.second; row++) {
+        for (int column=limit_column.first; column<limit_column.second; column++) {
+            if (sudoku[row][column] == x && !(row == cell.first && column == cell.second)) return false;
+        }
+    }
+
+    return true;
+}
+
 void print_sudoku (const int size, const vector<vector<int>>& sudoku) {
     cout << endl;
 
@@ -104,7 +131,7 @@ int main () {
             sudoku[cell.first][cell.second] ++;
 
             if (sudoku[cell.first][cell.second] > size) break;
-        } while (!check(size, sudoku));
+        } while (!check(size, sudoku, {cell.first, cell.second}));
         
         // "overflow" of this cell
         if (sudoku[cell.first][cell.second] > size) {
