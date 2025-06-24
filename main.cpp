@@ -5,7 +5,34 @@
 
 using namespace std;
 
-bool check (const int size, const vector<vector<int>>& sudoku) {
+
+void print_sudoku (int size, const vector<vector<int>>& sudoku) {
+    cout << endl;
+
+    int grid_size = sqrt(size);
+
+    for (int row=0; row<size; row++) {
+        if (row % grid_size == 0) {
+            for (int i=0; i<(size+grid_size)*2 +1; i++) {
+                cout << '-';
+            }
+            cout << endl;
+        }
+        for (int column=0; column<size; column++) {
+            if (column % grid_size == 0) cout << "| ";
+            cout << sudoku[row][column] << " ";
+        }
+        cout << '|';
+        cout << endl;
+    }
+
+    for (int i=0; i<(size+grid_size)*2 +1; i++) {
+        cout << '-';
+    }
+    cout << endl;
+}
+
+bool check (int size, const vector<vector<int>>& sudoku) {
     // rows control
     for (int row=0; row<size; row++) {
         for (int i=1; i<=size; i++) {
@@ -43,7 +70,7 @@ bool check (const int size, const vector<vector<int>>& sudoku) {
     return true;
 }
 
-bool check (const int size, const vector<vector<int>>& sudoku, const pair<int, int>& cell) {
+bool check (int size, const vector<vector<int>>& sudoku, const pair<int, int>& cell) {
     int x = sudoku[cell.first][cell.second];
     
     for (int i=0; i<size; i++) {
@@ -70,16 +97,49 @@ bool check (const int size, const vector<vector<int>>& sudoku, const pair<int, i
     return true;
 }
 
-void print_sudoku (const int size, const vector<vector<int>>& sudoku) {
-    cout << endl;
+int regular_solve (int size, vector<vector<int>>& sudoku, int empty_cells) {
+    int change = 0;
 
-    for (int row=0; row<size; row++) {
-        for (int column=0; column<size; column++) {
-            cout << sudoku[row][column] << " ";
+    do {
+        for (int row=0; row<size; row++) {
+            for (int column=0; column<size; column++) {
+                if (sudoku[row][column] == 0) {
+                    int c = 0, s;
+
+                    for (int x=1; x<=size; x++) {
+                        sudoku[row][column] = x;
+
+                        if (check(size, sudoku, {row, column})) {
+                            if (++c > 1) break;
+                            s = x;
+                        }
+                    }
+
+                    if (c == 1) {
+                        sudoku[row][column] = s;
+                        empty_cells --;
+                        change ++;
+        
+                        system("cls");
+                        print_sudoku(size, sudoku);
+                    } else {
+                        sudoku[row][column] = 0;
+                    }
+                }
+            }
         }
-        cout << endl;
-    }
+    } while (empty_cells > 0 && change > 0);
+
+    return empty_cells;
 }
+
+void solve (int size, vector<vector<int>>& sudoku, int empty_cells) {
+    
+    do {
+        
+    } while (empty_cells);
+}
+
 
 int main () {
     int size;
@@ -102,41 +162,15 @@ int main () {
         cout << "The inserted sudoku is unsolvable" << endl;
         return 0;
     }
+
+    regular_solve (size, sudoku_input, empty_cells);
     
     vector<vector<int>> sudoku = sudoku_input;
     
     int solved_cells = 0;
-    
-    while (solved_cells < empty_cells) {
-        for (int row=0; row<size; row++) {
-            for (int column=0; column<size; column++) {
-                if (sudoku[row][column] == 0) {
-                    int c = 0, s;
-
-                    for (int x=1; x<=size; x++) {
-                        sudoku[row][column] = x;
-
-                        if (check(size, sudoku, {row, column})) {
-                            if (++c > 1) break;
-                            s = x;
-                        }
-                    }
-
-                    if (c == 1) {
-                        sudoku[row][column] = s;
-                        solved_cells ++;
-        
-                        system("cls");
-                        print_sudoku(size, sudoku);
-                    } else {
-                        sudoku[row][column] = 0;
-                    }
-                }
-            }
-        }
-    }
 
     system("cls");
+    cout << regular_solve (size, sudoku, empty_cells) << endl;
     print_sudoku(size, sudoku);
 
     system("pause");
