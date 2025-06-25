@@ -122,6 +122,8 @@ int regular_solve (int size, vector<vector<int>>& sudoku, int empty_cells) {
         
                         system("cls");
                         print_sudoku(size, sudoku);
+                    } else if (c == 0) {
+                        return -1;
                     } else {
                         sudoku[row][column] = 0;
                     }
@@ -133,12 +135,54 @@ int regular_solve (int size, vector<vector<int>>& sudoku, int empty_cells) {
     return empty_cells;
 }
 
+void brute_force_solve (int size, vector<vector<int>>& sudoku, int empty_cells) {
+    vector<pair<int, int>> cells (0);
+    for (int row = 0; row<size; row ++) {
+        for (int column = 0; column<size; column ++) {
+            if (sudoku[row][column] == 0) cells.emplace_back(row, column);
+        }
+    }
+
+    int x=0;
+    pair<int, int> cell = cells[0];
+    bool go_back = false;
+
+    do {
+        while (sudoku[cell.first][cell.second] != 0 && x != cells.size() -1 && !go_back) {
+            cell = cells[++ x];
+        }
+
+        do {
+            sudoku[cell.first][cell.second] ++;
+        } while (!check(size, sudoku, cell) && sudoku[cell.first][cell.second] <= size);
+
+        if (sudoku[cell.first][cell.second] > size) {
+            do {
+                empty_cells ++;
+                sudoku[cell.first][cell.second] = 0;
+                if (x > 0) cell = cells[-- x];
+                else break;
+                if (sudoku[cell.first][cell.second] < size) {
+                    sudoku[cell.first][cell.second] ++;
+                    break;
+                }
+            } while (sudoku[cell.first][cell.second] >= size);
+            go_back = true;
+        } else {
+            empty_cells --;
+            go_back = false;
+        }
+    } while (empty_cells > 0);
+}
+
+/*
 void solve (int size, vector<vector<int>>& sudoku, int empty_cells) {
     
     do {
         
     } while (empty_cells);
 }
+*/
 
 
 int main () {
@@ -163,15 +207,19 @@ int main () {
         return 0;
     }
 
-    regular_solve (size, sudoku_input, empty_cells);
+    // regular_solve (size, sudoku_input, empty_cells);
     
     vector<vector<int>> sudoku = sudoku_input;
     
     int solved_cells = 0;
 
+    brute_force_solve(size, sudoku, empty_cells);
+
     system("cls");
-    cout << regular_solve (size, sudoku, empty_cells) << endl;
-    print_sudoku(size, sudoku);
+    // cout << regular_solve (size, sudoku, empty_cells) << endl;
+    // print_sudoku(size, sudoku);
+
+    print_sudoku (size, sudoku);
 
     system("pause");
 
