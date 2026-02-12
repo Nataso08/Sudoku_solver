@@ -1,5 +1,4 @@
 #include <iostream>
-#include <fstream>
 #include <vector>
 #include <math.h>
 #include <algorithm>
@@ -21,7 +20,7 @@ struct findColumn {
 };
 
 bool checkPossible (short r, short c, short n);
-void solve (int i0, int j0);
+bool solve (int i0, int j0);
 void print ();
 
 
@@ -40,6 +39,7 @@ int main () {
 
     solve(0, 0);
 
+    cout << "Solved: " << endl;
     print();
 }
 
@@ -69,23 +69,25 @@ bool checkPossible (short r, short c, short n) {
     return 1;
 }
 
-void solve (int i0, int j0) {
-    print();
+bool solve (int i0, int j0) {
+    // print();
     for (int i=i0; i<N; i++) {
         for (int j=j0; j<N; j++) {
             if (grid[i][j] == 0) {
                 for (int n=1; n<=N; n++) {
                     if (checkPossible(i, j, n)) {
                         grid[i][j] = n;
-                        solve (0, 0);
+                        if (solve (0, 0)) break;
                         grid[i][j] = 0;
-                        print();
-                    }
+                        // print();
+                    } 
+                    if (n == N) return 0;
                 }
-                return ;
+                return 1;
             }
         }
     }
+    return 1;
 }
 
 void print () {
