@@ -9,12 +9,7 @@ using namespace std;
 
 
 bool checkPossible (short r, short c, short n);
-pair<short, short> findEmpty ();
-bool solve ();
 void print ();
-
-bool solveDLX (priority_queue<Point, vector<Point>, BetterPrecision>  comb);
-
 
 short N;
 short l;
@@ -24,10 +19,13 @@ class Point {
     private:
         short row;
         short column;
+        pair<short, short> cell0;
         set<short> options;
     public:
         Point () {}
         Point (short row, short column) : row(row), column(column) {
+            cell0.first = (row/l) * l;
+            cell0.second = (column/l) * l;
             options.clear();
         }
         void setPos (short row, short column) {
@@ -45,27 +43,35 @@ class Point {
         void removeOption (short n) {
             options.erase(n);
         }
+        /*
         void updateOptions () {
             for (short n : options) {
                 if (!check_possible(n)) removeOption (n);
             }
         }
+        */
         void printOptions () {
             for (short n : options) {
                 cout << n << " ";
             }
             cout << endl;
         }
-        set<short> getOptions () {
+        const set<short> getOptions () const {
             return options;
         }
-        void setValue (short n) {
-            grid[this->row][this->column] = n;
-            for (int i=0; i<N; i++) {
-                
-            }
-        }
+        void setValue (short n);
 };
+
+vector<vector<Point*>> points;
+
+
+struct BetterPrecision {
+    bool operator ()(const Point& a, const Point& b) const {
+        return a.getOptions().size() < b.getOptions().size();
+    }
+};
+
+// bool solveDLX (priority_queue<Point, vector<Point>, BetterPrecision>  comb);
 
 
 struct findColumn {
@@ -79,18 +85,17 @@ struct findColumn {
     }
 };
 
-struct BetterPrecision {
-    bool operator ()(Point& a, Point& b) const {
-        return a.getOptions().size() < b.getOptions().size();
-    }
-};
 
 int main () {
     // setup griglia
     cin >> N;
-    grid.resize(N);
     l = sqrt(N);
-    for (short i=0; i<N; i++) grid[i].resize(N);
+    grid.resize(N);
+    points.resize(N);
+    for (short i=0; i<N; i++) {
+        grid[i].resize(N);
+        points[i].resize(N);
+    }
     
     // input sudoku
     for (short i=0; i<N; i++) {
@@ -99,20 +104,17 @@ int main () {
     }
     cout << endl;
 
-    // test Point su grid
-    Point a (0, 0);
-    a.initOptions ();
-    a.printOptions ();
-    // grid[0][1] = 4;
-    a.updateOptions ();
-    a.printOptions ();
-
-    priority_queue<Point, vector<Point>, BetterPrecision>  comb;
+    priority_queue<Point&, vector<Point&>, BetterPrecision>  comb;
     
-    solveDLX (comb);
-    
-    // solve();
+    for (int i=0; i<N; i++) {
+        for (int j=0; j<N; j++) {
+            (*points[i][j]).initOptions();
+            comb.emplace(points[i][j]);
+        }
+    }
 
+    // solveDLX (comb);
+    
     cout << "Solved: " << endl;
     print();
 }
@@ -127,7 +129,6 @@ bool checkPossible (short r, short c, short n) {
     // 2) check column
     if (find_if(grid.begin(), grid.end(), findColumn(c, n)) != grid.end()) return 0;
 
-
     // 3) check square
     // cella origine quadrato
     short r0 = (r/l) *l;
@@ -141,43 +142,22 @@ bool checkPossible (short r, short c, short n) {
     return 1;
 }
 
-pair<short, short> findEmpty () {
-    for (short i=0; i<N; i++) {
-        for (short j=0; j<N; j++) {
-            if (grid[i][j] == 0) return (pair<short, short>) {i, j};
+/*
+bool solveDLX (priority_queue<Point&, vector<Point&>, BetterPrecision>  comb) {
+    if (comb.size() == 0) return 1;
+    
+    if (comb.size() >= 1) {
+        Point P = comb.top();
+        if (P.check_possible(*(P.getOptions().begin()))) {
+            P.setValue(*(P.getOptions().begin()));
+            return 1;
         }
     }
-
-    return (pair<short, short>) {-1, -1};
-}
-
-bool solve () {
-    // print();
-    pair<short, short> RC = findEmpty ();
-
-    if (RC.first == -1) return 1;
-
-    for (int n=1; n<=N; n++) {
-        if (checkPossible(RC.first, RC.second, n)) {
-            grid[RC.first][RC.second] = n;
-            if (solve ()) break;
-            grid[RC.first][RC.second] = 0;
-            // print();
-        } 
-        if (n == N) return 0;
-    }
-
+    
+    
     return 1;
 }
-bool solveDLX (priority_queue<Point, vector<Point>, BetterPrecision>  comb) {
-    if (comb.size() == 0) return 1;
-    if (comb.size() == 1) {
-        Point P = comb.top();
-        if (P.check_possible(*(P.getOptions().end()))) {
-
-        }
-    }
-}
+*/
 
 void print () {
     for (int i=0; i<N; i++) {
@@ -186,4 +166,15 @@ void print () {
         cout << ((i+1)%(int)sqrt(N) == 0 ? "\n" : "") << endl;
     }
     cout << endl << endl;
+}
+void Point::setValue (short n)  {
+    grid[this->row][this->column] = n;
+    for (int i=0; i<N; i++) {
+        (*points[this->row][i]).removeOption(n);
+        (*points[i][this->column]).removeOption(n);
+    }
+    for (int i=cell0.first; i<cell0.first+l; i++) {
+        for (int j=cell0.second; j<cell0.second+l; j++)
+        (*points[i][j]).removeOption(n);
+    }
 }
