@@ -28,10 +28,6 @@ class Point {
             cell0.second = (column/l) * l;
             options.clear();
         }
-        void setPos (short row, short column) {
-            this->row = row;
-            this->column = column;
-        }
         bool check_possible (short n) {
             return checkPossible(this->row, this->column, n);
         }
@@ -43,13 +39,6 @@ class Point {
         void removeOption (short n) {
             options.erase(n);
         }
-        /*
-        void updateOptions () {
-            for (short n : options) {
-                if (!check_possible(n)) removeOption (n);
-            }
-        }
-        */
         void printOptions () {
             for (short n : options) {
                 cout << n << " ";
@@ -60,19 +49,20 @@ class Point {
             return options;
         }
         void setValue (short n);
+
+
+        bool operator <(const Point& b) const {
+            return this->getOptions().size() < b.getOptions().size();
+        }
 };
 
 vector<vector<Point*>> points;
 
-
 struct BetterPrecision {
-    bool operator ()(const Point& a, const Point& b) const {
-        return a.getOptions().size() < b.getOptions().size();
+    bool operator ()(const Point* a, const Point* b) const {
+        return a->getOptions().size() < b->getOptions().size();
     }
 };
-
-// bool solveDLX (priority_queue<Point, vector<Point>, BetterPrecision>  comb);
-
 
 struct findColumn {
     short c;
@@ -84,6 +74,8 @@ struct findColumn {
         return row[c] == n;
     }
 };
+
+bool solveDLX (priority_queue<Point*, vector<Point*>, BetterPrecision> comb);
 
 
 int main () {
@@ -104,11 +96,11 @@ int main () {
     }
     cout << endl;
 
-    priority_queue<Point&, vector<Point&>, BetterPrecision>  comb;
-    
+    priority_queue<Point*, vector<Point*>, BetterPrecision> comb;
+
     for (int i=0; i<N; i++) {
         for (int j=0; j<N; j++) {
-            (*points[i][j]).initOptions();
+            points[i][j]->initOptions();
             comb.emplace(points[i][j]);
         }
     }
@@ -142,22 +134,7 @@ bool checkPossible (short r, short c, short n) {
     return 1;
 }
 
-/*
-bool solveDLX (priority_queue<Point&, vector<Point&>, BetterPrecision>  comb) {
-    if (comb.size() == 0) return 1;
-    
-    if (comb.size() >= 1) {
-        Point P = comb.top();
-        if (P.check_possible(*(P.getOptions().begin()))) {
-            P.setValue(*(P.getOptions().begin()));
-            return 1;
-        }
-    }
-    
-    
-    return 1;
-}
-*/
+
 
 void print () {
     for (int i=0; i<N; i++) {
@@ -167,14 +144,40 @@ void print () {
     }
     cout << endl << endl;
 }
+
+
 void Point::setValue (short n)  {
     grid[this->row][this->column] = n;
     for (int i=0; i<N; i++) {
-        (*points[this->row][i]).removeOption(n);
-        (*points[i][this->column]).removeOption(n);
+        points[this->row][i]->removeOption(n);
+        points[i][this->column]->removeOption(n);
     }
-    for (int i=cell0.first; i<cell0.first+l; i++) {
-        for (int j=cell0.second; j<cell0.second+l; j++)
-        (*points[i][j]).removeOption(n);
+    for (int i=this->cell0.first; i<this->cell0.first+l; i++) {
+        for (int j=this->cell0.second; j<this->cell0.second+l; j++)
+        points[i][j]->removeOption(n);
     }
+}
+
+// return:
+//   0 se corretto
+//   1 se errore
+bool solveDLX (priority_queue<Point*, vector<Point*>, BetterPrecision> comb) {
+    // controllo esistenza elementi
+    if (comb.size() == 0) return 0;
+
+    // primo elemento della lista -> meno possibilità
+    Point P = *comb.top();
+
+    // non ha possibilità
+    if (P.getOptions().size() == 0) return 1;
+
+    // ha 1 possibilità
+    if (P.check_possible(*P.getOptions().begin())) {
+        P.setValue(*P.getOptions().begin());
+        comb.pop();
+        return 0;
+    } else return 1;
+
+    // ha più possibilità
+    
 }
