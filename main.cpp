@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <set>
 #include <queue>
@@ -28,6 +29,13 @@ class Point {
             cell0.second = (column/l) * l;
             options.clear();
         }
+        void setPos (short row, short column) {
+            this->row = row;
+            this->column = column;
+        }
+        const pair<short, short> getPos () {
+            return {this->row, this->column};
+        }
         bool check_possible (short n) {
             return checkPossible(this->row, this->column, n);
         }
@@ -38,6 +46,9 @@ class Point {
         }
         void removeOption (short n) {
             options.erase(n);
+        }
+        void addOption (short n) {
+            options.insert(n);
         }
         void printOptions () {
             for (short n : options) {
@@ -50,17 +61,16 @@ class Point {
         }
         void setValue (short n);
 
-
         bool operator <(const Point& b) const {
             return this->getOptions().size() < b.getOptions().size();
         }
 };
 
-vector<vector<Point*>> points;
+vector<vector<Point>> points;
 
 struct BetterPrecision {
     bool operator ()(const Point* a, const Point* b) const {
-        return a->getOptions().size() < b->getOptions().size();
+        return a->getOptions().size() > b->getOptions().size();
     }
 };
 
@@ -75,15 +85,20 @@ struct findColumn {
     }
 };
 
-bool solveDLX (priority_queue<Point*, vector<Point*>, BetterPrecision> comb);
+bool solveDLX (priority_queue<Point*, vector<Point*>, BetterPrecision>& comb);
 
 
 int main () {
+    // debug
+    ifstream cin ("test.txt");
+
     // setup griglia
+    cout << "Inserire la dimensione del Sudoku: >>> ";
     cin >> N;
     l = sqrt(N);
     grid.resize(N);
     points.resize(N);
+    cout << "Inserisci il Sudoku: " << endl;
     for (short i=0; i<N; i++) {
         grid[i].resize(N);
         points[i].resize(N);
@@ -100,12 +115,28 @@ int main () {
 
     for (int i=0; i<N; i++) {
         for (int j=0; j<N; j++) {
-            points[i][j]->initOptions();
-            comb.emplace(points[i][j]);
+            if (grid[i][j] == 0) {
+                points[i][j].setPos(i, j);
+                points[i][j].initOptions();
+                comb.emplace(&points[i][j]);
+            }
         }
     }
 
-    // solveDLX (comb);
+    // debug
+    /*
+    Point* a = comb.top();
+    cout << a << endl;
+    
+    for (short n : a->getOptions()) cout << n << " ";
+    cout << endl;
+    a->removeOption(4);
+    for (short n : a->getOptions()) cout << n << " ";
+    cout << endl << endl;
+    */
+
+
+    solveDLX (comb);
     
     cout << "Solved: " << endl;
     print();
@@ -149,19 +180,20 @@ void print () {
 void Point::setValue (short n)  {
     grid[this->row][this->column] = n;
     for (int i=0; i<N; i++) {
-        points[this->row][i]->removeOption(n);
-        points[i][this->column]->removeOption(n);
+        points[this->row][i].removeOption(n);
+        points[i][this->column].removeOption(n);
     }
     for (int i=this->cell0.first; i<this->cell0.first+l; i++) {
         for (int j=this->cell0.second; j<this->cell0.second+l; j++)
-        points[i][j]->removeOption(n);
+            points[i][j].removeOption(n);
     }
+    removeOption(n);
 }
 
 // return:
 //   0 se corretto
 //   1 se errore
-bool solveDLX (priority_queue<Point*, vector<Point*>, BetterPrecision> comb) {
+bool solveDLX (priority_queue<Point*, vector<Point*>, BetterPrecision>& comb) {
     // controllo esistenza elementi
     if (comb.size() == 0) return 0;
 
@@ -170,14 +202,24 @@ bool solveDLX (priority_queue<Point*, vector<Point*>, BetterPrecision> comb) {
 
     // non ha possibilità
     if (P.getOptions().size() == 0) return 1;
-
+    
     // ha 1 possibilità
-    if (P.check_possible(*P.getOptions().begin())) {
+    if (P.getOptions().size() == 1) {
         P.setValue(*P.getOptions().begin());
         comb.pop();
-        return 0;
-    } else return 1;
-
-    // ha più possibilità
+        return solveDLX(comb);
+    }
     
+    // ha più possibilità
+    while (P.getOptions().size() > 0) {
+        P.setValue(*P.getOptions().begin());
+        comb.pop();
+
+        if (!solveDLX(comb)) return 0;
+    }
+
+    // non funziona nulla
+    P.initOptions();
+    comb.push(&P);
+    return 1;
 }
