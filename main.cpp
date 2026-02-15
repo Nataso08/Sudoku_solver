@@ -2,18 +2,16 @@
 #include <fstream>
 #include <vector>
 #include <set>
-#include <queue>
 #include <math.h>
 #include <algorithm>
 
 using namespace std;
 
-
 bool checkPossible (short r, short c, short n);
 void print ();
 
-short N;
-short l;
+short N = 9;
+short l = 3;
 vector<vector<short>> grid;
 
 class Point {
@@ -32,9 +30,15 @@ class Point {
         void setPos (short row, short column) {
             this->row = row;
             this->column = column;
+            
+            cell0.first = (row/l) * l;
+            cell0.second = (column/l) * l;
         }
-        const pair<short, short> getPos () {
+        const pair<short, short> getPos () const {
             return {this->row, this->column};
+        }
+        const pair<short, short> getCell0 () const {
+            return cell0;
         }
         bool check_possible (short n) {
             return checkPossible(this->row, this->column, n);
@@ -45,10 +49,11 @@ class Point {
             }
         }
         void removeOption (short n) {
-            options.erase(n);
+            if (grid[this->row][this->column] == 0) options.erase(n);
         }
         void addOption (short n) {
-            options.insert(n);
+            if (grid[this->row][this->column] != 0) return ;
+            if (check_possible(n)) options.insert(n);
         }
         void printOptions () {
             for (short n : options) {
@@ -60,6 +65,13 @@ class Point {
             return options;
         }
         void setValue (short n);
+        void setValueFirst () {
+            this->setValue(*(this->options.begin()));
+        }
+        void reset () {
+            grid[this->row][this->column] = 0;
+            initOptions();
+        }
 
         bool operator <(const Point& b) const {
             return this->getOptions().size() < b.getOptions().size();
@@ -67,12 +79,15 @@ class Point {
 };
 
 vector<vector<Point>> points;
+Point buffer (-1, -1);
 
-struct BetterPrecision {
+struct BestPrecision {
     bool operator ()(const Point* a, const Point* b) const {
         return a->getOptions().size() > b->getOptions().size();
     }
 };
+
+Point* findBestCell ();
 
 struct findColumn {
     short c;
@@ -85,8 +100,9 @@ struct findColumn {
     }
 };
 
-bool solveDLX (priority_queue<Point*, vector<Point*>, BetterPrecision>& comb);
-
+void updateX (const Point& P, short n);
+void updateX (const Point& P);
+bool solve ();
 
 int main () {
     // debug
@@ -111,14 +127,11 @@ int main () {
     }
     cout << endl;
 
-    priority_queue<Point*, vector<Point*>, BetterPrecision> comb;
-
     for (int i=0; i<N; i++) {
         for (int j=0; j<N; j++) {
+            points[i][j].setPos(i, j);
             if (grid[i][j] == 0) {
-                points[i][j].setPos(i, j);
                 points[i][j].initOptions();
-                comb.emplace(&points[i][j]);
             }
         }
     }
@@ -135,9 +148,8 @@ int main () {
     cout << endl << endl;
     */
 
+    solve();
 
-    solveDLX (comb);
-    
     cout << "Solved: " << endl;
     print();
 }
@@ -165,8 +177,6 @@ bool checkPossible (short r, short c, short n) {
     return 1;
 }
 
-
-
 void print () {
     for (int i=0; i<N; i++) {
         for (int j=0; j<N; j++) 
@@ -176,8 +186,8 @@ void print () {
     cout << endl << endl;
 }
 
-
 void Point::setValue (short n)  {
+    this->removeOption(n);
     grid[this->row][this->column] = n;
     for (int i=0; i<N; i++) {
         points[this->row][i].removeOption(n);
@@ -187,39 +197,74 @@ void Point::setValue (short n)  {
         for (int j=this->cell0.second; j<this->cell0.second+l; j++)
             points[i][j].removeOption(n);
     }
-    removeOption(n);
+    return ;
+}
+
+Point* findBestCell () {
+    Point* bestPoint = &buffer;
+    short bestSize = N;
+
+    for (short i=0; i<N; i++) {
+        for (short j=0; j<N; j++) {
+            if (grid[i][j] == 0) {
+                if (points[i][j].getOptions().size() == 1) return &(points[i][j]);
+                if (points[i][j].getOptions().size() < bestSize) {
+                    bestSize = points[i][j].getOptions().size();
+                    bestPoint = &(points[i][j]);
+                }
+            }
+        }
+    }
+    
+    return bestPoint;
+}
+void updateX (const Point& P, short n) {
+    const pair<short, short> pos = P.getPos();
+    const pair<short, short> cell0 = P.getCell0();
+
+    for (int i=0; i<N; i++) {
+        points[pos.first][i].addOption(n);
+        points[i][pos.second].addOption(n);
+    }
+    for (int i=cell0.first; i<cell0.first+l; i++) {
+        for (int j=cell0.second; j<cell0.second+l; j++) 
+            points[i][j].addOption(n);
+    }
+}
+void updateX (const Point& P) {
+    for (short n=1; n<=N; n++) updateX(P, n);
 }
 
 // return:
 //   0 se corretto
 //   1 se errore
-bool solveDLX (priority_queue<Point*, vector<Point*>, BetterPrecision>& comb) {
-    // controllo esistenza elementi
-    if (comb.size() == 0) return 0;
+bool solve () {
+    // individuazione punto con meno combinazioni
+    Point* bestPoint = findBestCell();
 
-    // primo elemento della lista -> meno possibilità
-    Point P = *comb.top();
+    // non ci sono celle vuote
+    if (bestPoint == &buffer) return 0;
 
-    // non ha possibilità
-    if (P.getOptions().size() == 0) return 1;
-    
-    // ha 1 possibilità
-    if (P.getOptions().size() == 1) {
-        P.setValue(*P.getOptions().begin());
-        comb.pop();
-        return solveDLX(comb);
-    }
-    
-    // ha più possibilità
-    while (P.getOptions().size() > 0) {
-        P.setValue(*P.getOptions().begin());
-        comb.pop();
-
-        if (!solveDLX(comb)) return 0;
+    // 1 sola combinazione possibile:
+    if (bestPoint->getOptions().size() == 1) {
+        bestPoint->setValueFirst();
+        if (solve()) {
+            updateX(*bestPoint, grid[bestPoint->getPos().first][bestPoint->getPos().second]);
+            bestPoint->reset();
+            return 1;
+        }
+        return 0;
     }
 
-    // non funziona nulla
-    P.initOptions();
-    comb.push(&P);
+    // più opzioni possibili:
+    while (bestPoint->getOptions().size() > 0) {
+        bestPoint->setValueFirst();
+        if (!solve()) return 0;
+        updateX(*bestPoint, grid[bestPoint->getPos().first][bestPoint->getPos().second]);
+        grid[bestPoint->getPos().first][bestPoint->getPos().second] = 0;
+    }
+    
+    // non riuscito a risolvere
+    bestPoint->reset();
     return 1;
 }
