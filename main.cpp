@@ -55,12 +55,6 @@ class Point {
             if (grid[this->row][this->column] != 0) return ;
             if (check_possible(n)) options.insert(n);
         }
-        void printOptions () {
-            for (short n : options) {
-                cout << n << " ";
-            }
-            cout << endl;
-        }
         const set<short> getOptions () const {
             return options;
         }
@@ -72,10 +66,20 @@ class Point {
             grid[this->row][this->column] = 0;
             initOptions();
         }
-
+        
         bool operator <(const Point& b) const {
             return this->getOptions().size() < b.getOptions().size();
         }
+
+        // debug
+        /*
+        void printOptions () {
+            for (short n : options) {
+                cout << n << " ";
+            }
+            cout << endl;
+        }
+        */
 };
 
 vector<vector<Point>> points;
@@ -247,19 +251,7 @@ bool solve () {
     // non ci sono celle vuote
     if (bestPoint == &buffer) return 0;
 
-    // 1 sola combinazione possibile:
-    if (bestPoint->getOptions().size() == 1) {
-        short n = *(bestPoint->getOptions().begin());
-        bestPoint->setValue(n);
-        if (solve()) {
-            bestPoint->reset();
-            updateX(*bestPoint, n);
-            return 1;
-        }
-        return 0;
-    }
-
-    // più opzioni possibili:
+    // 1 o più combinazioni possibili
     while (bestPoint->getOptions().size() > 0) {
         bestPoint->setValueFirst();
         if (!solve()) return 0;
