@@ -187,7 +187,7 @@ void print () {
 }
 
 void Point::setValue (short n)  {
-    this->removeOption(n);
+        // this->removeOption(n);
     grid[this->row][this->column] = n;
     for (int i=0; i<N; i++) {
         points[this->row][i].removeOption(n);
@@ -197,6 +197,7 @@ void Point::setValue (short n)  {
         for (int j=this->cell0.second; j<this->cell0.second+l; j++)
             points[i][j].removeOption(n);
     }
+    options.erase(n);
     return ;
 }
 
@@ -207,7 +208,7 @@ Point* findBestCell () {
     for (short i=0; i<N; i++) {
         for (short j=0; j<N; j++) {
             if (grid[i][j] == 0) {
-                if (points[i][j].getOptions().size() == 1) return &(points[i][j]);
+                if (points[i][j].getOptions().size() <= 1) return &(points[i][j]);
                 if (points[i][j].getOptions().size() < bestSize) {
                     bestSize = points[i][j].getOptions().size();
                     bestPoint = &(points[i][j]);
@@ -230,6 +231,7 @@ void updateX (const Point& P, short n) {
         for (int j=cell0.second; j<cell0.second+l; j++) 
             points[i][j].addOption(n);
     }
+    return ;
 }
 void updateX (const Point& P) {
     for (short n=1; n<=N; n++) updateX(P, n);
@@ -247,10 +249,11 @@ bool solve () {
 
     // 1 sola combinazione possibile:
     if (bestPoint->getOptions().size() == 1) {
-        bestPoint->setValueFirst();
+        short n = *(bestPoint->getOptions().begin());
+        bestPoint->setValue(n);
         if (solve()) {
-            updateX(*bestPoint, grid[bestPoint->getPos().first][bestPoint->getPos().second]);
             bestPoint->reset();
+            updateX(*bestPoint, n);
             return 1;
         }
         return 0;
@@ -260,8 +263,10 @@ bool solve () {
     while (bestPoint->getOptions().size() > 0) {
         bestPoint->setValueFirst();
         if (!solve()) return 0;
-        updateX(*bestPoint, grid[bestPoint->getPos().first][bestPoint->getPos().second]);
+        short n = grid[bestPoint->getPos().first][bestPoint->getPos().second];
         grid[bestPoint->getPos().first][bestPoint->getPos().second] = 0;
+        updateX(*bestPoint, n);
+        bestPoint->removeOption(n);
     }
     
     // non riuscito a risolvere
