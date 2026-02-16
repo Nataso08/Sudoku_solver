@@ -1,4 +1,5 @@
 #include <iostream>
+#include <chrono>
 #include "src/solve.h"
 
 using namespace std;
@@ -23,6 +24,8 @@ int main () {
     }
     cout << endl;
 
+    auto start = std::chrono::high_resolution_clock::now();
+
     for (int i=0; i<N; i++) {
         for (int j=0; j<N; j++) {
             cells[i][j].setPos(i, j);
@@ -34,7 +37,13 @@ int main () {
 
     solve();
 
+    auto end = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double> duration = end - start;
+
+    
     cout << "Solved: " << endl;
     print();
+    cout << "Execution time: " << duration.count() << " seconds\n";
 }
 
