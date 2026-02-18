@@ -1,6 +1,16 @@
 # 🧩 Sudoku Solver
 
-Un risolutore di Sudoku efficiente e versatile scritto in C++, che utilizza un algoritmo di backtracking ottimizzato per risolvere puzzle Sudoku di qualsiasi dimensione (9x9, 16x16, ecc.).
+> **Un risolutore di Sudoku efficiente e versatile scritto in C++**
+>
+> Algoritmo di backtracking ottimizzato per risolvere puzzle Sudoku di qualsiasi dimensione (9x9, 16x16, 25x25, ecc.)
+
+[![C++](https://img.shields.io/badge/C%2B%2B-11%2B-blue.svg)](https://isocpp.org/)
+[![License](https://img.shields.io/badge/license-Free-green.svg)](LICENSE)
+[![GitHub Stars](https://img.shields.io/github/stars/Nataso08/Sudoku_solver?style=social)](https://github.com/Nataso08/Sudoku_solver/stargazers)
+
+## 📖 Descrizione
+
+Questo progetto implementa un risolutore di Sudoku intelligente che utilizza tecniche avanzate di backtracking e constraint propagation. Il solver è in grado di risolvere puzzle Sudoku di diverse dimensioni con performance ottimali, grazie all'utilizzo dell'euristica MRV (Minimum Remaining Values) per la selezione delle celle da riempire.
 
 ## ✨ Caratteristiche
 
@@ -159,6 +169,10 @@ I contributi sono benvenuti! Se vuoi migliorare il progetto:
 - [ ] Supporto per varianti del Sudoku (Sudoku X, Sudoku Samurai, ecc.)
 - [ ] Visualizzazione passo-passo della risoluzione
 - [ ] Parallelizzazione dell'algoritmo per puzzle molto grandi
+
+## 🏷️ Parole Chiave / Topics
+
+`sudoku` `sudoku-solver` `backtracking` `cpp` `algorithm` `constraint-propagation` `puzzle-solver` `recursive-algorithm` `optimization` `mrv-heuristic`
 
 ## 📜 Licenza
 
