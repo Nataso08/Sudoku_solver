@@ -1,0 +1,15 @@
+Package: Sudoku_solver
+Title: Efficient Sudoku Solver with Optimized Backtracking Algorithm
+Description: An efficient and versatile Sudoku solver written in C++ that uses an 
+    optimized backtracking algorithm to solve Sudoku puzzles of any size (9x9, 16x16, 
+    25x25, etc.). The solver implements an intelligent backtracking strategy with the 
+    MRV (Minimum Remaining Values) heuristic that always chooses the cell with the 
+    fewest possible options, resulting in optimal performance.
+Version: 1.0.0
+Authors: Nataso08
+URL: https://github.com/Nataso08/Sudoku_solver
+Topics: sudoku, sudoku-solver, backtracking, cpp, algorithm, constraint-propagation, 
+    puzzle-solver, recursive-algorithm, optimization, mrv-heuristic
+Language: C++
+License: Free
+Encoding: UTF-8
